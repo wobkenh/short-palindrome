@@ -37,8 +37,6 @@ public class Solution {
 
                 BigInteger count = BigInteger.ZERO;
                 long longCount = 0;
-                int i1Pairs = 1;
-                int i4Pairs = 1;
                 final int[] aIndizes = indizes.get(a);
 
                 if (aIndizes.length < 2) {
@@ -54,8 +52,8 @@ public class Solution {
                     return;
                 }
                 for (char b = 'a'; b <= 'z'; b++) {
-//                    System.out.println(a + ":" + b + " - count - " + count.toString());
-//                    System.out.println(a + ":" + b + " - long count - " + longCount);
+                    System.out.println("Starting " + a + ":" + b);
+                    long timeThread = System.currentTimeMillis();
                     if (a == b) {
                         if (aIndizes.length < 4) {
                             continue;
@@ -71,59 +69,78 @@ public class Solution {
                     if (aIndizes[0] > bIndizes[bIndizes.length - 1] || aIndizes[aIndizes.length - 1] < bIndizes[0]) {
                         continue;
                     }
-                    int i1;
-                    int i4;
-                    int lastStart = 0;
-                    for (i1 = 0; i1 < aIndizes.length - 1; i1++) {
-                        final int a1 = aIndizes[i1];
-                        final int a1p1 = aIndizes[i1 + 1];
-                        if (i1 < aIndizes.length - 2 && (a1p1 < lastStart || a1 + 1 == a1p1)) {
-                            // Wenn der nächste Eintrag der gleiche Buchstabe ist, diesen überspringen
-                            // Wenn dar nächste Eintrag noch vor dem ersten B vom letzen mal liegt
-                            i1Pairs++;
-                            continue;
-                        }
-                        // Anfang = aIndizes[i1]
-                        // Ende = aIndizes[i4]
-                        // Suche alle Einträge in bIndizes dazwischen
-                        int start = lastStart;
-                        for (; start < bIndizes.length; start++) {
-                            if (a1 < bIndizes[start]) {
-                                break;
-                            }
-                        }
-                        lastStart = start;
-                        int lastEnd = 0;
-                        for (i4 = i1 + 1; i4 < aIndizes.length; i4++) {
-                            final int a4 = aIndizes[i4];
-                            if (i4 < aIndizes.length - 1 && (lastEnd == (bIndizes.length - 1) ||
-                                    (lastEnd > 0 && aIndizes[i4 + 1] < bIndizes[lastEnd + 1]) || a4 + 1 == aIndizes[i4 + 1])) {
-                                // Wenn der nächste Eintrag der gleiche Buchstabe ist, diesen überspringen
-                                i4Pairs++;
-                                continue;
-                            }
+                    System.out.println("Checks bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
+                    timeThread = System.currentTimeMillis();
 
-                            int end = lastEnd;
-                            for (; end < bIndizes.length; end++) {
-                                if (end + 1 == bIndizes.length || bIndizes[end + 1] > a4) {
-                                    break;
+                    // Array mergen
+                    final int[] numbers = new int[aIndizes.length + bIndizes.length];
+                    boolean stop = false;
+                    int aIndex = 0;
+                    int bIndex = 0;
+                    int commonIndex = 0;
+                    boolean aTurn = true;
+                    while (aIndizes[aIndex] > bIndizes[bIndex]) {
+                        bIndex++;
+                    }
+                    while (!stop) {
+
+                        if (aIndizes[aIndex] < bIndizes[bIndex]) {
+                            if (aTurn) {
+                                numbers[commonIndex]++;
+                            } else {
+                                commonIndex++;
+                                numbers[commonIndex] = 1;
+                                aTurn = true;
+                            }
+                            aIndex++;
+                            if (aIndex == aIndizes.length) {
+                                stop = true;
+                            }
+                        } else {
+                            if (aTurn) {
+                                commonIndex++;
+                                numbers[commonIndex] = 1;
+                                aTurn = false;
+                            } else {
+                                numbers[commonIndex]++;
+                            }
+                            bIndex++;
+                            if (bIndex == bIndizes.length) {
+                                commonIndex++;
+                                numbers[commonIndex] = aIndizes.length - aIndex;
+                                stop = true;
+                            }
+                        }
+                    }
+
+                    System.out.println("Array merge bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
+                    timeThread = System.currentTimeMillis();
+
+                    // Möglichkeiten berechnen
+                    for (int a1 = 0; a1 <= commonIndex; a1 += 2) {
+                        int bCount = 0;
+                        final int a1Count = numbers[a1];
+                        int lastBIndex = a1 + 1;
+                        for (int a4 = a1 + 2; a4 <= commonIndex; a4 += 2) {
+                            final int a4Count = numbers[a4];
+                            bCount += numbers[lastBIndex];
+                            lastBIndex += 2;
+
+//                            for (; lastBIndex < a4; lastBIndex += 2) {
+//                                bCount += numbers[lastBIndex];
+//                            }
+                            if (bCount >= 2) {
+                                // TODO: Statt Berechnung durchzuführen nur Vermerk im array (array Länge anhand max bCount)
+                                //  und danach alles auf einmal berechnen
+                                longCount += (a1Count * a4Count) * possibilitiesTwo[bCount];
+                                if (longCount > moduloLong) {
+                                    longCount %= moduloLong;
                                 }
                             }
-//                            }
-
-                            if (start >= end) {
-                                i4Pairs = 1;
-                                continue;
-                            }
-                            lastEnd = end;
-                            longCount += (i4Pairs * i1Pairs) * possibilitiesTwo[(end - start + 1)];
-                            if (longCount > moduloLong) {
-                                longCount %= moduloLong;
-                            }
-                            i4Pairs = 1;
                         }
-                        i1Pairs = 1;
                     }
+
+                    System.out.println("Berechnung bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
                 }
                 synchronized (lock) {
                     threadsFinished++;
@@ -196,7 +213,7 @@ public class Solution {
 
 
     public static void main(String[] args) throws IOException {
-        final Scanner scanner = new Scanner(new File("/home/henning/dev/test/src/main/resources/test"));
+        final Scanner scanner = new Scanner(new File("/home/henning/dev/short-palindrome/src/main/resources/test2"));
         String s = scanner.nextLine();
         scanner.close();
 

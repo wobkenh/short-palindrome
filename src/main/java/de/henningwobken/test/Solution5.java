@@ -116,10 +116,10 @@ public class Solution5 {
 //                                continue;
 //                            }
 //                            lastEnd = end;
-////                            longCount += (i4Pairs * i1Pairs) * possibilitiesTwo[(end - start + 1)];
-////                            if (longCount > moduloLong) {
-////                                longCount %= moduloLong;
-////                            }
+//                            longCount += (i4Pairs * i1Pairs) * possibilitiesTwo[(end - start + 1)];
+//                            if (longCount > moduloLong) {
+//                                longCount %= moduloLong;
+//                            }
 //                            i4Pairs = 1;
 //                        }
 //                        i1Pairs = 1;
