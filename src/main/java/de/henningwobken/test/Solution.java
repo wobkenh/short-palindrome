@@ -82,6 +82,7 @@ public class Solution {
                     while (aIndizes[aIndex] > bIndizes[bIndex]) {
                         bIndex++;
                     }
+                    final int bStartIndex = bIndex;
                     while (!stop) {
 
                         if (aIndizes[aIndex] < bIndizes[bIndex]) {
@@ -116,31 +117,34 @@ public class Solution {
                     System.out.println("Array merge bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
                     timeThread = System.currentTimeMillis();
 
+                    int[] calculations = new int[bIndizes.length - bStartIndex + 1];
+
                     // Möglichkeiten berechnen
                     for (int a1 = 0; a1 <= commonIndex; a1 += 2) {
                         int bCount = 0;
                         final int a1Count = numbers[a1];
-                        int lastBIndex = a1 + 1;
                         for (int a4 = a1 + 2; a4 <= commonIndex; a4 += 2) {
                             final int a4Count = numbers[a4];
-                            bCount += numbers[lastBIndex];
-                            lastBIndex += 2;
-
-//                            for (; lastBIndex < a4; lastBIndex += 2) {
-//                                bCount += numbers[lastBIndex];
-//                            }
-                            if (bCount >= 2) {
-                                // TODO: Statt Berechnung durchzuführen nur Vermerk im array (array Länge anhand max bCount)
-                                //  und danach alles auf einmal berechnen
-                                longCount += (a1Count * a4Count) * possibilitiesTwo[bCount];
-                                if (longCount > moduloLong) {
-                                    longCount %= moduloLong;
-                                }
-                            }
+                            bCount += numbers[a4 - 1];
+                            calculations[bCount] += a1Count * a4Count;
                         }
                     }
 
-                    System.out.println("Berechnung bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
+                    System.out.println("Berechnung (1/2) bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
+                    timeThread = System.currentTimeMillis();
+
+                    for (int i = 2; i < calculations.length; i++) {
+                        final int factor = calculations[i]; //* calculationsB[i];
+                        if (factor == 0) {
+                            continue;
+                        }
+                        longCount += factor * possibilitiesTwo[i];
+                        if (longCount > moduloLong) {
+                            longCount %= moduloLong;
+                        }
+                    }
+
+                    System.out.println("Berechnung (2/2) bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
                 }
                 synchronized (lock) {
                     threadsFinished++;
