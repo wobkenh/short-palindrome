@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 @SuppressWarnings("Duplicates") // Damit mehrere Solution-Klassen nebeneinander stehen können
-public class Solution {
+public class SolutionMultithread {
 
     // Complete the shortPalindrome function below.
     static Map<Character, int[]> indizes = new HashMap<>();
@@ -20,6 +20,7 @@ public class Solution {
     static final Object lock = new Object();
     static final Object lock2 = new Object();
     static long[] possibilitiesTwo;
+    static int threadCount = 26;
 
     // Complete the shortPalindrome function below.
     static int shortPalindrome(String s) {
@@ -37,14 +38,14 @@ public class Solution {
             new Thread(() -> {
 
                 BigInteger count = BigInteger.ZERO;
-                long longCount = 0;
+//                long longCount = 0;
                 final int[] aIndizes = indizes.get(a);
 
                 if (aIndizes.length < 2) {
                     synchronized (lock) {
                         threadsFinished++;
                     }
-                    if (threadsFinished == 26) {
+                    if (threadsFinished == threadCount) {
                         synchronized (lock2) {
                             lock2.notify();
                         }
@@ -52,7 +53,8 @@ public class Solution {
 
                     return;
                 }
-                for (char b = 'a'; b <= 'z'; b++) {
+                for (char b2 = 'a'; b2 <= 'z'; b2++) {
+                    final char b = b2;
                     System.out.println("Starting " + a + ":" + b);
                     long timeThread = System.currentTimeMillis();
                     if (a == b) {
@@ -70,88 +72,108 @@ public class Solution {
                     if (aIndizes[0] > bIndizes[bIndizes.length - 1] || aIndizes[aIndizes.length - 1] < bIndizes[0]) {
                         continue;
                     }
+
                     System.out.println("Checks bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
-                    timeThread = System.currentTimeMillis();
 
-                    // Array mergen
-                    final int[] numbers = new int[aIndizes.length + bIndizes.length];
-                    boolean stop = false;
-                    int aIndex = 0;
-                    int bIndex = 0;
-                    int commonIndex = 0;
-                    boolean aTurn = true;
-                    while (aIndizes[aIndex] > bIndizes[bIndex]) {
-                        bIndex++;
-                    }
-                    final int bStartIndex = bIndex;
-                    while (!stop) {
+                    new Thread(() -> {
 
-                        if (aIndizes[aIndex] < bIndizes[bIndex]) {
-                            if (aTurn) {
-                                numbers[commonIndex]++;
-                            } else {
-                                commonIndex++;
-                                numbers[commonIndex] = 1;
-                                aTurn = true;
-                            }
-                            aIndex++;
-                            if (aIndex == aIndizes.length) {
-                                stop = true;
-                            }
-                        } else {
-                            if (aTurn) {
-                                commonIndex++;
-                                numbers[commonIndex] = 1;
-                                aTurn = false;
-                            } else {
-                                numbers[commonIndex]++;
-                            }
+                        synchronized (lock) {
+                            threadCount++;
+                        }
+
+                        long timeThreadInner = System.currentTimeMillis();
+
+                        long longCount = 0;
+                        // Array mergen
+                        final int[] numbers = new int[aIndizes.length + bIndizes.length];
+                        boolean stop = false;
+                        int aIndex = 0;
+                        int bIndex = 0;
+                        int commonIndex = 0;
+                        boolean aTurn = true;
+                        while (aIndizes[aIndex] > bIndizes[bIndex]) {
                             bIndex++;
-                            if (bIndex == bIndizes.length) {
-                                commonIndex++;
-                                numbers[commonIndex] = aIndizes.length - aIndex;
-                                stop = true;
+                        }
+                        final int bStartIndex = bIndex;
+                        while (!stop) {
+
+                            if (aIndizes[aIndex] < bIndizes[bIndex]) {
+                                if (aTurn) {
+                                    numbers[commonIndex]++;
+                                } else {
+                                    commonIndex++;
+                                    numbers[commonIndex] = 1;
+                                    aTurn = true;
+                                }
+                                aIndex++;
+                                if (aIndex == aIndizes.length) {
+                                    stop = true;
+                                }
+                            } else {
+                                if (aTurn) {
+                                    commonIndex++;
+                                    numbers[commonIndex] = 1;
+                                    aTurn = false;
+                                } else {
+                                    numbers[commonIndex]++;
+                                }
+                                bIndex++;
+                                if (bIndex == bIndizes.length) {
+                                    commonIndex++;
+                                    numbers[commonIndex] = aIndizes.length - aIndex;
+                                    stop = true;
+                                }
                             }
                         }
-                    }
 
-                    System.out.println("Array merge bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
-                    timeThread = System.currentTimeMillis();
+                        System.out.println("Array merge bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThreadInner));
+                        timeThreadInner = System.currentTimeMillis();
 
-                    int[] calculations = new int[bIndizes.length - bStartIndex + 1];
+                        int[] calculations = new int[bIndizes.length - bStartIndex + 1];
 
-                    // Möglichkeiten berechnen
-                    for (int a1 = 0; a1 <= commonIndex; a1 += 2) {
-                        int bCount = 0;
-                        final int a1Count = numbers[a1];
-                        for (int a4 = a1 + 2; a4 <= commonIndex; a4 += 2) {
-                            final int a4Count = numbers[a4];
-                            bCount += numbers[a4 - 1];
-                            calculations[bCount] += a1Count * a4Count;
+                        // Möglichkeiten berechnen
+                        for (int a1 = 0; a1 <= commonIndex; a1 += 2) {
+                            int bCount = 0;
+                            final int a1Count = numbers[a1];
+                            for (int a4 = a1 + 2; a4 <= commonIndex; a4 += 2) {
+                                final int a4Count = numbers[a4];
+                                bCount += numbers[a4 - 1];
+                                calculations[bCount] += a1Count * a4Count;
+                            }
                         }
-                    }
 
-                    System.out.println("Berechnung (1/2) bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
-                    timeThread = System.currentTimeMillis();
+                        System.out.println("Berechnung (1/2) bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThreadInner));
+                        timeThreadInner = System.currentTimeMillis();
 
-                    for (int i = 2; i < calculations.length; i++) {
-                        final int factor = calculations[i]; //* calculationsB[i];
-                        if (factor == 0) {
-                            continue;
+                        for (int i = 2; i < calculations.length; i++) {
+                            final int factor = calculations[i]; //* calculationsB[i];
+                            if (factor == 0) {
+                                continue;
+                            }
+                            longCount += factor * possibilitiesTwo[i];
+                            if (longCount > moduloLong) {
+                                longCount %= moduloLong;
+                            }
                         }
-                        longCount += factor * possibilitiesTwo[i];
-                        if (longCount > moduloLong) {
-                            longCount %= moduloLong;
-                        }
-                    }
 
-                    System.out.println("Berechnung (2/2) bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
+                        synchronized (lock) {
+                            threadsFinished++;
+                            result = result.add(BigInteger.valueOf(longCount));
+                        }
+                        if (threadsFinished == threadCount) {
+                            synchronized (lock2) {
+                                lock2.notify();
+                            }
+                        }
+
+                        System.out.println("Berechnung (2/2) bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThreadInner));
+                    }).start();
                 }
                 synchronized (lock) {
                     threadsFinished++;
-                    result = result.add(count).add(BigInteger.valueOf(longCount));
+                    result = result.add(count);
                 }
-                if (threadsFinished == 26) {
+                if (threadsFinished == threadCount) {
                     synchronized (lock2) {
                         lock2.notify();
                     }
