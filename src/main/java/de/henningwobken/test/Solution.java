@@ -12,24 +12,22 @@ public class Solution {
 
     // Complete the shortPalindrome function below.
     static Map<Character, int[]> indizes = new HashMap<>();
-    //    static BigInteger[] resultArr = new BigInteger[26];
     static BigInteger result = BigInteger.ZERO;
     static BigInteger modulo = BigInteger.valueOf((long) Math.pow(10, 9) + 7);
     static long moduloLong = (long) Math.pow(10, 9) + 7;
     static int threadsFinished = 0;
     static final Object lock = new Object();
     static final Object lock2 = new Object();
-    static long[] possibilitiesTwo;
 
     // Complete the shortPalindrome function below.
     static int shortPalindrome(String s) {
         if (s.length() < 4) {
             return 0;
         }
-        final long time = System.currentTimeMillis();
+//        final long time = System.currentTimeMillis();
         final char[] letters = s.toCharArray();
         buildIndizesMap(letters);
-        System.out.println("Time for map and possibilities: " + (System.currentTimeMillis() - time));
+//        System.out.println("Time for map and possibilities: " + (System.currentTimeMillis() - time));
 
         for (char a2 = 'a'; a2 <= 'z'; a2++) {
             final char a = a2;
@@ -52,8 +50,8 @@ public class Solution {
                     return;
                 }
                 for (char b = 'a'; b <= 'z'; b++) {
-                    System.out.println("Starting " + a + ":" + b);
-                    long timeThread = System.currentTimeMillis();
+//                    System.out.println("Starting " + a + ":" + b);
+//                    long timeThread = System.currentTimeMillis();
                     if (a == b) {
                         if (aIndizes.length < 4) {
                             continue;
@@ -69,8 +67,8 @@ public class Solution {
                     if (aIndizes[0] > bIndizes[bIndizes.length - 1] || aIndizes[aIndizes.length - 1] < bIndizes[0]) {
                         continue;
                     }
-                    System.out.println("Checks bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
-                    timeThread = System.currentTimeMillis();
+//                    System.out.println("Checks bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
+//                    timeThread = System.currentTimeMillis();
 
                     // Array mergen
 
@@ -82,7 +80,7 @@ public class Solution {
                         bIndex++;
                     }
                     final boolean[] sequence = new boolean[aIndizes.length + bIndizes.length - bIndex];
-                    long stopIndex = sequence.length;
+                    int stopIndex = sequence.length;
                     while (!stop) {
 
                         if (aIndizes[aIndex] < bIndizes[bIndex]) {
@@ -91,13 +89,13 @@ public class Solution {
                             aIndex++;
                             if (aIndex == aIndizes.length) {
                                 stop = true;
+                                stopIndex = commonIndex;
                             }
                         } else {
                             sequence[commonIndex] = false;
                             commonIndex++;
                             bIndex++;
                             if (bIndex == bIndizes.length) {
-                                stopIndex = commonIndex;
                                 for (; commonIndex < sequence.length; commonIndex++) {
                                     sequence[commonIndex] = true;
                                 }
@@ -109,8 +107,8 @@ public class Solution {
                     // Array enthält jetzt true für a und false für b,
                     // z.B. [true, false, false, true, false] bei der Zeichenkette "abbab"
 
-                    System.out.println("Array merge bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
-                    timeThread = System.currentTimeMillis();
+//                    System.out.println("Array merge bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
+//                    timeThread = System.currentTimeMillis();
 
                     // Lookup-Table aufbauen
 
@@ -159,20 +157,20 @@ public class Solution {
                     // Um dieses zu verhindern, werden alle Probleme vorher berechnet. Die Subprobleme werden aufeinander aufbauend gelöst,
                     // bis man wieder beim Ursprungsproblem angekommen ist.
 
-                    for (int i = 1; i <= sequence.length; i++) { // Startindex = 1, da erste Zeile + Spalte bereits belegt, s.o.
+                    for (int i = 1; i <= stopIndex; i++) { // Startindex = 1, da erste Zeile + Spalte bereits belegt, s.o.
                         for (int j = 1; j <= subSequence.length; j++) {
                             // In einer kleineren Sequence kommt die aktuell betrachtete Subsequence mindestens so häufig
                             // vor wie bei der vorherigen sequence
                             possibilities[i][j] = possibilities[i - 1][j];
                             if (sequence[i - 1] == subSequence[j - 1]) { // Buchstaben stimmen überein
                                 possibilities[i][j] += possibilities[i - 1][j - 1];
-                                possibilities[i][j] %= moduloLong;
+//                                possibilities[i][j] %= moduloLong;
                             }
                         }
                     }
 
-                    System.out.println("Lookup-Table bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
-                    longCount += possibilities[sequence.length][subSequence.length];
+//                    System.out.println("Lookup-Table bei " + a + ":" + b + " done nach " + (System.currentTimeMillis() - timeThread));
+                    longCount += possibilities[stopIndex][subSequence.length];
                     longCount = longCount % moduloLong;
                 }
                 synchronized (lock) {
@@ -199,7 +197,6 @@ public class Solution {
 
     static BigInteger possibilitiesFour(long count) {
         BigInteger bigCount = BigInteger.valueOf(count);
-        System.out.println("BIIIG Count 4");
         return bigCount
                 .multiply(BigInteger.valueOf(count - 1))
                 .multiply(BigInteger.valueOf(count - 2))
